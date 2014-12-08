@@ -2,81 +2,67 @@
 ~function (){
 	"use strict";
 
-	var Muzik = function (){
+	var Muzik = function (opts){
 		this.file = null;
-		this.filename = null;
 		this.audioContext = null;
 		this.source = null;
+
+		this._init(opts);
 	};
+
 	Muzik.prototype = {
-		_prepareAPI: function(){
-			// check support
-			window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
-			window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
-
-			try{
-				this.audioContext = new window.AudioContext();
-			}
-			catch(e){
-				console.log('Your browser does not support AudioContext!');
-			}
-		},
-
-		_addEventListener: function(){
+		_init: function (opts) {
 			var self = this,
-				audioInput = document.querySelector('#uploadedFile'),
-				dropContainer = document.querySelector('#canvas');
+				inputFile = document.querySelector(opts.input),
+				dragFile = document.querySelector(opts.drag);
 
-			audioInput.addEventListener('change', function(){
-				if (audioInput.files.length !== 0) {
-					self.file = audioInput.files[0];
-					self.filename = self.file.name;
-					self._start();
-				};
-			},false);
-
-			dropContainer.addEventListener('dragenter',function(){
-				self._updateInfo('Drop it on the page',true);
-			},false);
-			dropContainer.addEventListener('dragover',function(e){
-				e.stopPropagation();
-				e.preventDefault();
-				e.dataTransfer.dropEffect = 'copy';
-			},false);
-			dropContainer.addEventListener('drop',function(e){
-				e.stopPropagation();
-				e.preventDefault();
-				self.file = e.dataTransfer.files[0];
-				self.filename = self.file.name;
+			if (!self.isAudioContextSupported()) {
+				return false;
+			}
+			
+			self.audioContext = new window.AudioContext();
+			// Bind Event
+			self.inputEventBind(inputFile, function(file){
+				self.file = file;
 				self._start();
-			},false);
+			});
+			self.dragEventBind(dragFile, function(file){
+				self.file = file;
+				self._start();
+			});
 		},
 
 		_start: function(){
 			var self = this,
-				file = self.file,
+				audioContext = self.audioContext,
 				fr = new FileReader();
 
 			fr.onload = function(e){
-				var fileResult = e.target.result,
-					audioContext = self.audioContext;
-				audioContext.decodeAudioData(fileResult,function(buffer){
-					self._visualize(audioContext,buffer);
-				},function(e){
-					console.log('Decode failed');
-				});
+				var fileResult = e.target.result;
+
+				audioContext.decodeAudioData(
+					fileResult,
+					function(buffer){
+						self._visualize(audioContext,buffer);
+					},
+					function(e){
+						console.log('Decode failed');
+					});
 			};
 
-			fr.readAsArrayBuffer(file);
+			fr.readAsArrayBuffer(self.file);
 		},
 
 		_visualize: function(audioContext, buffer){
 			var audioBufferSourceNode = audioContext.createBufferSource(),
 				analyser = audioContext.createAnalyser();
+
 			audioBufferSourceNode.connect(analyser);
 			analyser.connect(audioContext.destination);
+
 			audioBufferSourceNode.buffer = buffer;
 			audioBufferSourceNode.start(0);
+			
 			this._drawSpectrum(analyser);
 		},
 
@@ -124,6 +110,70 @@
 			};
 
 			requestAnimationFrame(drawMeter);
+		},
+
+		/**
+		 *  ==========Public Method==========
+		**/
+		inputEventBind: function(obj,func){
+			var events = {
+				'change': function(){
+					if (this.files.length !== 0) {
+						func(this.files[0]);
+					}
+				},
+			};
+			for (var ev in events) {
+				obj.addEventListener(ev, events[ev], false);
+			}
+		},
+
+		dragEventBind: function(obj,func){
+			var events = {
+				'dragenter': function(){
+					console.log('Drop it on the page');
+				},
+				'dragover': function(e){
+					e.stopPropagation();
+					e.preventDefault();
+					e.dataTransfer.dropEffect = 'copy';
+				},
+				'drop': function(e){
+					console.log('Drop down');
+					e.stopPropagation();
+					e.preventDefault();
+					func(e.dataTransfer.files[0]);
+				},
+			};
+			for (var ev in events) {
+				obj.addEventListener(ev, events[ev], false);
+			}
+		},
+
+		isAudioContextSupported: function(){
+			// API Compatible Support
+			window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
+			window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
+			// Check API
+			try{
+				var tmp = new window.AudioContext();
+			}
+			catch(e){
+				console.log('Your browser does not support AudioContext!');
+				return false;
+			}
+			return true;
+		},
+
+		// To Do
+		loadSound: function(url){
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET',url,true);
+			xhr.responseType = 'arraybuffer';
+			xhr.onload = function(){
+				var arraybuffer = xhr.response;
+			};
+			xhr.send();
 		},
 	};
 

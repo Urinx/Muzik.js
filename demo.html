@@ -1,27 +1,14 @@
-<div id="wrapper">
-	<div id="fileWrapper" class="file_wrapper">
-		<label for="uploadedFile">Drag & drop or select a file to play:</label>
-		<input type="file" id="uploadedFile">
-	</div>
-	<div id="visualizer_wrapper">
-		<canvas id="canvas" width="800" height="300"></canvas>
-	</div>
-</div>
-
 <script src="muzik.js"></script>
+
+<input type="file" id="uploadedFile">
+<canvas id="canvas" width="800" height="300"></canvas>
+
 <script type="text/javascript">
 // Test
-var M=new Muzik();
-M._prepareAPI();
-M._addEventListener();
-
-function loadSound(url){
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET',url,true);
-	xhr.responseType = 'arraybuffer';
-	xhr.onload = function(){
-		var arraybuffer = xhr.response;
-	};
-	xhr.send();
-}
+var opts = {
+		input: '#uploadedFile',
+		drag: '#canvas',
+		canvas: '#canvas',
+	},
+	M = new Muzik(opts);
 </script>
