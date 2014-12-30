@@ -6,6 +6,9 @@
 		this.file = null;
 		this.audioContext = null;
 		this.source = null;
+		this.canvas = null;
+		this.opts = opts;
+		this.drawOpts = {};
 
 		this._init(opts);
 	};
@@ -15,6 +18,8 @@
 			var self = this,
 				inputFile = document.querySelector(opts.input),
 				dragFile = document.querySelector(opts.drag);
+			self.canvas = document.querySelector(opts.canvas);
+			self.drawOpts = self._initDraw();
 
 			if (!self.isAudioContextSupported()) {
 				return false;
@@ -43,7 +48,7 @@
 				audioContext.decodeAudioData(
 					fileResult,
 					function(buffer){
-						self._visualize(audioContext,buffer);
+						self._initRender(audioContext,buffer);
 					},
 					function(e){
 						console.log('Decode failed');
@@ -53,7 +58,7 @@
 			fr.readAsArrayBuffer(self.file);
 		},
 
-		_visualize: function(audioContext, buffer){
+		_initRender: function(audioContext, buffer){
 			var audioBufferSourceNode = audioContext.createBufferSource(),
 				analyser = audioContext.createAnalyser();
 
@@ -63,53 +68,82 @@
 			audioBufferSourceNode.buffer = buffer;
 			audioBufferSourceNode.start(0);
 			
-			this._drawSpectrum(analyser);
+			this._render(analyser, this.drawOpts, this._draw);
 		},
 
-		_drawSpectrum: function(analyser){
-			var canvas = document.querySelector('#canvas'),
-				cwidth = canvas.width,
-				cheight = canvas.height -2,
+		_render: function(analyser, opt, draw){
+			var loopFunc = function(){
+				var array =new Uint8Array(analyser.frequencyBinCount);
+				analyser.getByteFrequencyData(array);
+
+				draw(array, opt);
+
+				requestAnimationFrame(loopFunc);
+			};
+			requestAnimationFrame(loopFunc);
+		},
+
+		_initDraw: function(){
+			var canvas = self.canvas,
+				w = canvas.width,
+				h = canvas.height-2,
 				meterWidth = 10,
 				gap = 2,
 				capHeight = 2,
 				capStyle = '#fff',
-				meterNum = 800/(10+2),
+				meterNum = w/(meterWidth+gap),
 				capYPositionArray = [],
 				ctx = canvas.getContext('2d'),
-				gradient = ctx.createLinearGradient(0, 0, 0, 300);
+				gradient = ctx.createLinearGradient(0, 0, 0, h);
 
-			gradient.addColorStop(1,'#0f0');
-			gradient.addColorStop(0.5,'#ff0');
-			gradient.addColorStop(0,'#f00');
+			gradient.addColorStop(1, '#0f0');
+			gradient.addColorStop(0.5, '#ff0');
+			gradient.addColorStop(0, '#f00');
 
-			var drawMeter = function(){
-				var array =new Uint8Array(analyser.frequencyBinCount);
-				analyser.getByteFrequencyData(array);
-				var step = Math.round(array.length/meterNum);
-				ctx.clearRect(0,0,cwidth,cheight);
+			return {
+				w: w,
+				h: h,
+				meterWidth: meterWidth,
+				capHeight: capHeight,
+				capStyle: capStyle,
+				meterNum: meterNum,
+				capYPositionArray: capYPositionArray,
+				ctx: ctx,
+				gradient: gradient,
+			};
+		},
 
-				for (var i = 0; i < meterNum; i++) {
-					var value = array[i*step];
-					if (capYPositionArray.length<Math.round(meterNum)) {
-						capYPositionArray.push(value);
-					};
-					ctx.fillStyle = capStyle;
-					if(value < capYPositionArray[i]){
-						ctx.fillRect(i*12,cheight - (--capYPositionArray[i]), meterWidth,capHeight);
-					}
-					else{
-						ctx.fillRect(i*12,cheight-value,meterWidth,capHeight);
-						capYPositionArray[i]=value;
-					}
-					ctx.fillStyle=gradient;
-					ctx.fillRect(i*12,cheight-value+capHeight,meterWidth,cheight);
+		_draw: function(buffer, opt){
+			var w = opt.w,
+				h = opt.h,
+				meterWidth = opt.meterWidth,
+				capHeight = opt.capHeight,
+				capStyle = opt.capStyle,
+				meterNum = opt.meterNum,
+				capYPositionArray = opt.capYPositionArray,
+				ctx = opt.ctx,
+				gradient = opt.gradient,
+				step = Math.round( buffer.length/meterNum );
+			ctx.clearRect(0, 0, w, h);
+
+			for (var i = 0; i < meterNum; i++) {
+				var value = buffer[i*step];
+				
+				if (capYPositionArray.length<Math.round(meterNum)) {
+					capYPositionArray.push(value);
 				};
 				
-				requestAnimationFrame(drawMeter);
+				ctx.fillStyle = capStyle;
+				if(value < capYPositionArray[i]){
+					ctx.fillRect(i*12, h - (--capYPositionArray[i]), meterWidth,capHeight);
+				}
+				else{
+					ctx.fillRect(i*12, h-value, meterWidth,capHeight);
+					capYPositionArray[i]=value;
+				}
+				ctx.fillStyle=gradient;
+				ctx.fillRect(i*12, h-value+capHeight, meterWidth, h);
 			};
-
-			requestAnimationFrame(drawMeter);
 		},
 
 		/**
