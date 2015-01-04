@@ -19,7 +19,7 @@
 				inputFile = document.querySelector(opts.input),
 				dragFile = document.querySelector(opts.drag);
 			self.canvas = document.querySelector(opts.canvas);
-			self.drawOpts = self._initDraw();
+			self.drawOpts = self._initDraw(opts.draw_conf);
 
 			if (!self.isAudioContextSupported()) {
 				return false;
@@ -83,34 +83,27 @@
 			requestAnimationFrame(loopFunc);
 		},
 
-		_initDraw: function(){
+		_initDraw: function(opts){
 			var canvas = self.canvas,
 				w = canvas.width,
-				h = canvas.height-2,
-				meterWidth = 10,
-				gap = 2,
-				capHeight = 2,
-				capStyle = '#fff',
-				meterNum = w/(meterWidth+gap),
-				capYPositionArray = [],
+				h = canvas.height,
 				ctx = canvas.getContext('2d'),
+				gradient;
+
+			if (opts.type == 'histogram') {
+				var g = opts.grad;
 				gradient = ctx.createLinearGradient(0, 0, 0, h);
+				for (var i = 0; i < g.length; i++) {
+					gradient.addColorStop(i/(g.length-1), g[i]);
+				}
+			}
 
-			gradient.addColorStop(1, '#0f0');
-			gradient.addColorStop(0.5, '#ff0');
-			gradient.addColorStop(0, '#f00');
-
-			return {
+			return this.extend({
 				w: w,
 				h: h,
-				meterWidth: meterWidth,
-				capHeight: capHeight,
-				capStyle: capStyle,
-				meterNum: meterNum,
-				capYPositionArray: capYPositionArray,
 				ctx: ctx,
 				gradient: gradient,
-			};
+			},opts);
 		},
 
 		_draw: function(buffer, opt){
@@ -119,8 +112,9 @@
 				meterWidth = opt.meterWidth,
 				capHeight = opt.capHeight,
 				capStyle = opt.capStyle,
-				meterNum = opt.meterNum,
-				capYPositionArray = opt.capYPositionArray,
+				gap = opt.gap,
+				meterNum = w / (meterWidth+gap),
+				capYPositionArray = [],
 				ctx = opt.ctx,
 				gradient = opt.gradient,
 				step = Math.round( buffer.length/meterNum );
@@ -197,6 +191,32 @@
 				return false;
 			}
 			return true;
+		},
+
+		extend: function(){
+			var argv = [];
+			for (var i = 0; i < arguments.length; i++) {
+				argv.push(arguments[i]);
+			}
+			if (typeof argv[0] === 'string') {
+				return argv.join('');
+			}
+			else if (typeof argv[0] === 'object') {
+				if ('concat' in argv[0]) {
+					return argv.reduce(function(a,b){
+						return a.concat(b);
+					});
+				}
+				return argv.reduce(function(a,b){
+					Object.keys(b).map(function(i){
+						a[i] = b[i];
+					});
+					return a;
+				});
+			}
+			else {
+				throw new Error('can not be extend');
+			};
 		},
 
 		// To Do

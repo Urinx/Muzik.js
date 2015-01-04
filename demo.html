@@ -9,6 +9,14 @@ var opts = {
 		input: '#uploadedFile',
 		drag: '#canvas',
 		canvas: '#canvas',
+		draw_conf: {
+			type: 'histogram', // pie graph
+			meterWidth: 10,
+			gap: 2,
+			capHeight: 2,
+			capStyle: '#fff',
+			grad: ['#f00','#ff0','#0f0'],
+		},
 	},
 	M = new Muzik(opts);
 </script>
