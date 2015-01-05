@@ -9,6 +9,7 @@
 		this.canvas = null;
 		this.opts = opts;
 		this.drawOpts = {};
+		this.drawFunc = null;
 
 		this._init(opts);
 	};
@@ -20,6 +21,7 @@
 				dragFile = document.querySelector(opts.drag);
 			self.canvas = document.querySelector(opts.canvas);
 			self.drawOpts = self._initDraw(opts.draw_conf);
+			self.drawFunc = self._initDrawFunc(opts.draw_conf.type);
 
 			if (!self.isAudioContextSupported()) {
 				return false;
@@ -68,7 +70,7 @@
 			audioBufferSourceNode.buffer = buffer;
 			audioBufferSourceNode.start(0);
 			
-			this._render(analyser, this.drawOpts, this._draw);
+			this._render(analyser, this.drawOpts, this.drawFunc);
 		},
 
 		_render: function(analyser, opt, draw){
@@ -106,17 +108,58 @@
 			},opts);
 		},
 
-		_draw: function(buffer, opt){
+		/**
+		 *  ==========Draw Function==========
+		**/
+		_initDrawFunc: function(type){
+			var drawMap= {
+				'histogram': this.draw_histogram,
+				'pie': this.draw_pie,
+			};
+			return drawMap[type];
+		},
+
+		draw_pie: function(buffer, opt){
 			var w = opt.w,
 				h = opt.h,
+				ctx = opt.ctx,
+				gradient = opt.gradient,
+				color = opt.color,
+				lineWidth = opt.lineWidth,
+				gap = opt.gap,
+				x = w/2,
+				y = h/2,
+				R = x<y?x-lineWidth:y-lineWidth,
+				r = buffer[10]%R;
+			ctx.clearRect(0, 0, w, h);
+
+			ctx.fillStyle = color;
+			ctx.beginPath();
+			ctx.moveTo(x+r,y);
+			ctx.arc(x,y,r,0,2*Math.PI,true);
+			ctx.closePath();
+			ctx.fill();
+
+			ctx.strokeStyle = color;
+			ctx.lineWidth = lineWidth;
+			ctx.beginPath();
+			ctx.moveTo(x+r+gap,y);
+			ctx.arc(x,y,r+gap,0,2*Math.PI,true);
+			ctx.closePath();
+			ctx.stroke();
+		},
+
+		draw_histogram: function(buffer, opt){
+			var w = opt.w,
+				h = opt.h,
+				ctx = opt.ctx,
+				gradient = opt.gradient,
 				meterWidth = opt.meterWidth,
 				capHeight = opt.capHeight,
 				capStyle = opt.capStyle,
 				gap = opt.gap,
 				meterNum = w / (meterWidth+gap),
 				capYPositionArray = [],
-				ctx = opt.ctx,
-				gradient = opt.gradient,
 				step = Math.round( buffer.length/meterNum );
 			ctx.clearRect(0, 0, w, h);
 

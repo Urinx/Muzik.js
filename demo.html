@@ -1,7 +1,7 @@
 <script src="muzik.js"></script>
 
 <input type="file" id="uploadedFile">
-<canvas id="canvas" width="800" height="300"></canvas>
+<canvas id="canvas" width="600" height="300"></canvas>
 
 <script type="text/javascript">
 // Test
@@ -9,13 +9,21 @@ var opts = {
 		input: '#uploadedFile',
 		drag: '#canvas',
 		canvas: '#canvas',
+		/*
 		draw_conf: {
-			type: 'histogram', // pie graph
+			type: 'histogram',
 			meterWidth: 10,
 			gap: 2,
 			capHeight: 2,
 			capStyle: '#fff',
 			grad: ['#f00','#ff0','#0f0'],
+		},
+		*/
+		draw_conf: {
+			type: 'pie',
+			color: '#0f0',
+			lineWidth: 2,
+			gap: 5,
 		},
 	},
 	M = new Muzik(opts);
