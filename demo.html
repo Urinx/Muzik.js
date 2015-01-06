@@ -19,11 +19,20 @@ var opts = {
 			grad: ['#f00','#ff0','#0f0'],
 		},
 		*/
+		/*
 		draw_conf: {
 			type: 'pie',
-			color: '#0f0',
+			color: '#000',
 			lineWidth: 2,
 			gap: 5,
+		},
+		*/
+		draw_conf: {
+			type: 'line',
+			color: '#000',
+			lineWidth: 2,
+			k: 0.05,
+			n: 30,
 		},
 	},
 	M = new Muzik(opts);
