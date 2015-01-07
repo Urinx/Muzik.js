@@ -2,6 +2,10 @@
 ~function (){
 	"use strict";
 
+	var $ = function(ele){
+		return document.querySelector(ele);
+	};
+
 	var Muzik = function (opts){
 		this.file = null;
 		this.audioContext = null;
@@ -17,9 +21,9 @@
 	Muzik.prototype = {
 		_init: function (opts) {
 			var self = this,
-				inputFile = document.querySelector(opts.input),
-				dragFile = document.querySelector(opts.drag);
-			self.canvas = document.querySelector(opts.canvas);
+				inputFile = $(opts.input),
+				dragFile = $(opts.drag);
+			self.canvas = $(opts.canvas);
 			self.drawOpts = self._initDraw(opts.draw_conf);
 			self.drawFunc = self._initDrawFunc(opts.draw_conf.type);
 
@@ -39,25 +43,45 @@
 			});
 		},
 
+		_xhrLoadSound: function(url){
+			var self = this,
+				p = new Promise(function(resolve,reject){
+					var xhr = new XMLHttpRequest();
+					xhr.open('GET',url,true);
+					xhr.responseType = 'arraybuffer';
+					xhr.onload = function(){
+						resolve(xhr.response);
+					};
+					xhr.send();
+				});
+			p.then(function(arraybuffer){
+				self._audioDecode(arraybuffer);
+			});
+		},
+
 		_start: function(){
 			var self = this,
-				audioContext = self.audioContext,
 				fr = new FileReader();
 
 			fr.onload = function(e){
 				var fileResult = e.target.result;
-
-				audioContext.decodeAudioData(
-					fileResult,
-					function(buffer){
-						self._initRender(audioContext,buffer);
-					},
-					function(e){
-						console.log('Decode failed');
-					});
+				self._audioDecode(fileResult);
 			};
 
 			fr.readAsArrayBuffer(self.file);
+		},
+
+		_audioDecode: function(arraybuffer){
+			var self = this,
+				audioContext = self.audioContext;
+			audioContext.decodeAudioData(
+				arraybuffer,
+				function(buffer){
+					self._initRender(audioContext,buffer);
+				},
+				function(e){
+					console.log('Decode failed');
+				});
 		},
 
 		_initRender: function(audioContext, buffer){
@@ -280,9 +304,9 @@
 					});
 				}
 				return argv.reduce(function(a,b){
-					Object.keys(b).map(function(i){
+					for (var i in b){
 						a[i] = b[i];
-					});
+					};
 					return a;
 				});
 			}
@@ -291,16 +315,6 @@
 			};
 		},
 
-		// To Do
-		loadSound: function(url){
-			var xhr = new XMLHttpRequest();
-			xhr.open('GET',url,true);
-			xhr.responseType = 'arraybuffer';
-			xhr.onload = function(){
-				var arraybuffer = xhr.response;
-			};
-			xhr.send();
-		},
 	};
 
 	if (typeof exports === 'object') {
