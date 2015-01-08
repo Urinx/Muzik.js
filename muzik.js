@@ -16,6 +16,9 @@
 		this.drawFunc = null;
 
 		this._init(opts);
+
+		// seal self to prevent add new property
+		Object.seal(this);
 	};
 
 	Muzik.prototype = {
@@ -139,12 +142,42 @@
 			var drawMap= {
 				'histogram': this.draw_histogram,
 				'pie': this.draw_pie,
+				'foldline': this.draw_foldline,
 				'line': this.draw_line,
 			};
 			return drawMap[type];
 		},
 
 		draw_line: function(buffer, opt){
+			var w = opt.w,
+				h = opt.h,
+				ctx = opt.ctx,
+				lineWidth = opt.lineWidth,
+				shift = w*opt.k,
+				n = opt.n,
+				color =opt.color,
+				o = h/2,
+				step = w/(n+1),
+				b_step = Math.floor(buffer.length/n);
+			ctx.clearRect(0, 0, w, h);
+
+			ctx.lineWidth = lineWidth;
+			ctx.strokeStyle = color;
+			ctx.beginPath();
+			ctx.moveTo(0,o);
+			ctx.lineTo(w,o);
+			for (var i = 1; i <= n; i++) {
+				var s = shift + step*i,
+					t = o+Math.pow(-1,i)*(buffer[b_step*i]%o);
+				ctx.moveTo(s,o),
+				ctx.lineTo(s,t);
+			}
+			ctx.lineTo(w,o);
+			ctx.closePath();
+			ctx.stroke();
+		},
+
+		draw_foldline: function(buffer, opt){
 			var w = opt.w,
 				h = opt.h,
 				ctx = opt.ctx,

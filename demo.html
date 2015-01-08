@@ -1,3 +1,8 @@
+<style type="text/css">
+body{
+	background-color: rgb(23,23,23);
+}
+</style>
 <script src="muzik.js"></script>
 
 <input type="file" id="uploadedFile">
@@ -27,12 +32,21 @@ var opts = {
 			gap: 5,
 		},
 		*/
+		/*
 		draw_conf: {
-			type: 'line',
-			color: '#000',
+			type: 'foldline',
+			color: '#fff',
 			lineWidth: 2,
 			k: 0.05,
 			n: 30,
+		},
+		*/
+		draw_conf: {
+			type: 'line',
+			color: '#fff',
+			lineWidth: 2,
+			k: 0.1,
+			n: 50,
 		},
 	},
 	M = new Muzik(opts);
