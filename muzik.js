@@ -145,7 +145,7 @@
 				'foldline': this.draw_foldline,
 				'line': this.draw_line,
 			};
-			return drawMap[type];
+			return drawMap[type] || 'histogram';
 		},
 
 		draw_line: function(buffer, opt){
@@ -254,7 +254,7 @@
 				
 				if (capYPositionArray.length<Math.round(meterNum)) {
 					capYPositionArray.push(value);
-				};
+				}
 				
 				ctx.fillStyle = capStyle;
 				if(value < capYPositionArray[i]){
@@ -266,7 +266,7 @@
 				}
 				ctx.fillStyle=gradient;
 				ctx.fillRect(i*12, h-value+capHeight, meterWidth, h);
-			};
+			}
 		},
 
 		/**
@@ -339,13 +339,13 @@
 				return argv.reduce(function(a,b){
 					for (var i in b){
 						a[i] = b[i];
-					};
+					}
 					return a;
 				});
 			}
 			else {
 				throw new Error('can not be extend');
-			};
+			}
 		},
 
 	};
