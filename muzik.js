@@ -334,10 +334,7 @@
 		},
 
 		extend: function(){
-			var argv = [];
-			for (var i = 0; i < arguments.length; i++) {
-				argv.push(arguments[i]);
-			}
+			var argv = Array.prototype.slice.call(arguments);
 			if (typeof argv[0] === 'string') {
 				return argv.join('');
 			}
