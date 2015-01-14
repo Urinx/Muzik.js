@@ -31,7 +31,8 @@ body{
 .Framework li:nth-child(1) .center_content h1.up_part{
 	text-align: center;
 	font-weight: bolder;
-	font-size: 11em;
+	font-size: 20vmin;
+	line-height: 40vh;
 }
 .left, .right{
 	width: 50%;
