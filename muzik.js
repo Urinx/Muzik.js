@@ -338,12 +338,12 @@
 			if (typeof argv[0] === 'string') {
 				return argv.join('');
 			}
-			else if (typeof argv[0] === 'object') {
-				if ('concat' in argv[0]) {
-					return argv.reduce(function(a,b){
+			else if (argv[0] instanceof Array) {
+				return argv.reduce(function(a,b){
 						return a.concat(b);
-					});
-				}
+				});
+			}
+			else if (argv[0] instanceof Object) {
 				return argv.reduce(function(a,b){
 					for (var i in b){
 						a[i] = b[i];
