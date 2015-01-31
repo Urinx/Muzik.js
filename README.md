@@ -2,6 +2,7 @@ Muzik.js
 ========
 
 音乐可视化前端框架
+
 [项目主页](http://urinx.github.io/)
 
 ## Installation
@@ -66,3 +67,6 @@ You can drag local music(.mp3) file:
 	});
 </script>
 ```
+
+## License
+Muzik.js is released under the GPL License. See [LICENSE](./LICENSE) file for details.
