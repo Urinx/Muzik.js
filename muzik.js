@@ -2,18 +2,18 @@
 ~function (){
 	"use strict";
 
-	var $ = function(ele){
-		return document.querySelector(ele);
+	var $ = function(el){
+		return document.querySelector(el);
 	};
 
 	var Muzik = function (opts){
 		this.file = null;
 		this.audioContext = null;
 		this.source = null;
-		this.canvas = null;
+		this.canvas = [];
 		this.opts = opts;
-		this.drawOpts = {};
-		this.drawFunc = null;
+		this.drawOpts = [];
+		this.drawFunc = [];
 		this.sourceNode = null;
 
 		this._init(opts);
@@ -27,10 +27,15 @@
 			var self = this,
 				inputFile = $(opts.input),
 				dragFile = $(opts.drag),
-				loadFile = opts.load;
-			self.canvas = $(opts.canvas);
-			self.drawOpts = self._initDraw(opts.draw_conf);
-			self.drawFunc = self._initDrawFunc(opts.draw_conf.type);
+				loadFile = opts.load,
+				canvas = [].concat(opts.canvas),
+				draw_conf = [].concat(opts.draw_conf);
+
+			canvas.map(function(c,i){
+				self.canvas.push($(c));
+				self.drawOpts.push(self._initDraw(draw_conf[i],i));
+				self.drawFunc.push(self._initDrawFunc(draw_conf[i].type));
+			});
 
 			if (!self.isAudioContextSupported()) {
 				return false;
@@ -113,15 +118,17 @@
 				var array =new Uint8Array(analyser.frequencyBinCount);
 				analyser.getByteFrequencyData(array);
 
-				draw(array.subarray(0,730), opt);
+				draw.map(function(f,i){
+					f(array.subarray(0,730), opt[i]);
+				});
 
 				requestAnimationFrame(loopFunc);
 			};
 			requestAnimationFrame(loopFunc);
 		},
 
-		_initDraw: function(opts){
-			var canvas = this.canvas,
+		_initDraw: function(opts,i){
+			var canvas = this.canvas[i],
 				w = canvas.width,
 				h = canvas.height,
 				ctx = canvas.getContext('2d'),
@@ -261,7 +268,7 @@
 			ctx.clearRect(0, 0, w, h);
 
 			for (var i = 0; i < meterNum; i++) {
-				var value = buffer[i*step];
+				var value = buffer[i*step]>h?h:buffer[i*step];
 				
 				if (capYPositionArray.length<Math.round(meterNum)) {
 					capYPositionArray.push(value);
